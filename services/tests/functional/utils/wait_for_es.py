@@ -1,4 +1,3 @@
-import os
 import time
 import backoff
 
@@ -9,15 +8,12 @@ from elasticsearch import (
     RequestError
 )
 
-from utils.helpers import logger
+from logger import logger
+from settings import test_settings
+
 
 timeout = time.time() + 60 * 5
-
-ELASTIC_PROTOCOL = os.getenv('ELASTIC_PROTOCOL', 'http')
-ELASTIC_HOST = os.getenv('ELASTIC_HOST', '127.0.0.1')
-ELASTIC_PORT = int(os.getenv('ELASTIC_PORT', 9200))
-
-hosts = [f'{ELASTIC_PROTOCOL}://{ELASTIC_HOST}:{ELASTIC_PORT}']
+hosts = [f'{test_settings.elastic_protocol}://{test_settings.elastic_host}:{test_settings.elastic_port}']
 
 
 @backoff.on_exception(
@@ -33,5 +29,5 @@ def connect_to_es(es: Elasticsearch) -> None:
 
 
 if __name__ == '__main__':
-    es_client = Elasticsearch(hosts=hosts, validate_cert=False, use_ssl=False)
+    es_client = Elasticsearch(hosts=hosts, verify_certs=False)
     connect_to_es(es_client)

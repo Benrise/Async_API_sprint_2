@@ -6,6 +6,8 @@ from services.person import PersonService, get_person_service
 import core.config as config
 from models.person import PersonFilms
 from models.film import FilmRating
+from models.abstract import PaginatedParams
+
 
 router = APIRouter()
 
@@ -28,33 +30,20 @@ async def person_details(person_id: str, person_service: PersonService = Depends
 
 @router.get('/search/',
             response_model=list[PersonFilms],
-            defautlt='Lucas',
             summary='Получить список людей',
             description='Формат массива данных ответа: uuid, full_name, films')
 async def persons_list(
         query: str = Query(
-            default=None,
+            default='Lucas',
             alias=config.QUERY_ALIAS,
             description=config.QUERY_DESC
         ),
-        page: int = Query(
-            default=1,
-            ge=1,
-            alias=config.PAGE_ALIAS,
-            description=config.PAGE_DESC
-        ),
-        size: int = Query(
-            default=10,
-            ge=1,
-            le=config.MAX_PAGE_SIZE,
-            alias=config.SIZE_ALIAS,
-            description=config.SIZE_DESC
-        ),
+        pagination: PaginatedParams = Depends(),
         person_service: PersonService = Depends(get_person_service)) -> list[PersonFilms]:
     persons = await person_service.get_persons(
         query,
-        page,
-        size,
+        pagination.page,
+        pagination.size,
     )
     if not persons:
         raise HTTPException(status_code=HTTPStatus.NOT_FOUND, detail='persons not found')
